@@ -262,19 +262,12 @@
                     <div className="w-full h-screen bg-gray-800 flex flex-col items-center justify-start py-4 overflow-hidden relative">
                         
                         {/* 上方進度條 & 分數 */}
-                        <div className="w-full max-w-md px-4 mb-2">
-                            <div className="flex items-center justify-between text-gray-200 text-sm mb-1">
-                                <span>第 {currentQIndex + 1} 題 / 共 {QUESTIONS.length} 題</span>
-                                <span>目前分數：{score}</span>
-                            </div>
-                            <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-gradient-to-r from-orange-400 to-pink-500 transition-all duration-300"
-                                    style={{ width: `${((currentQIndex + 1) / QUESTIONS.length) * 100}%` }}
-                                ></div>
-                            </div>
-                        </div>
-
+                        {/* 只有目前分數，不要進度條 */}
+<div className="w-full max-w-md px-4 mb-2">
+    <div className="flex items-center justify-end text-gray-200 text-sm">
+        <span>目前分數：{score}</span>
+    </div>
+</div>
                         <div className="w-full max-w-md relative mt-2 px-2"> 
                             <div className="relative flex justify-center w-full">
                                 <img 
