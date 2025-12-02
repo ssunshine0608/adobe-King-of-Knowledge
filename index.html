@@ -132,7 +132,7 @@
                 id: 1, 
                 image: "q1.jpg", 
                 correct: 1,
-                explanation: "這題的正確選項是右上角。Firefly 支援與 Nano Banana Pro 搭配，讓圖片細節與光影表現更加穩定。"
+                explanation: "Adobe 的生成式 AI 技術統稱為 “Firefly 模型家族”，名字靈感來自「螢火蟲點亮創意」。Firefly 的特色是為創作者打造，包含高品質細節、商用安全的訓練數據，以及能融入 Photoshop、Illustrator、Express 內的工作流程。Firefly 也是目前唯一在企業級環境中特別強調授權透明度與內容責任的生成式 AI。"
             }, 
             { 
                 id: 2, 
@@ -298,7 +298,7 @@
                         <div className={`overlay ${showExplanation ? 'show' : ''}`}>
                             <div className="explanation-card">
                                 <h2>
-                                    {lastIsCorrect ? '答對了！🎉' : '這題有點可惜～'}
+                                    {lastIsCorrect ? '正確 ⭕️' : '錯誤 ❌'}
                                 </h2>
                                 <p>
                                     {QUESTIONS[currentQIndex].explanation}
