@@ -24,25 +24,33 @@
         // ★ 設定區 ★
         // ==========================================
         
-        // 為了方便您，我先預填了一組根據圖片推算的數值
-        // 如果還是不準，請在網址後面加上 ?debug=true 來微調
-        // 例如：index.html?debug=true
+        // 【重要修正】GitHub Pages 的專案名稱，用於構造正確的圖片路徑
+        // 請確保所有圖片檔名都已改為小寫（q1.jpg, q2.jpg, fengmian.jpg 等）
+        const BASE_PATH = "/adobe-King-of-Knowledge/";
         
-        const CLICK_AREA_TOP_PERCENT = 29;    // 距離頂部 (選項通常從 1/3 處開始)
-        const CLICK_AREA_HEIGHT_PERCENT = 65; // 高度 (佔據剩下的大部分)
-        const CLICK_AREA_LEFT_PERCENT = 7;    // 距離左邊 (稍微縮進去)
-        const CLICK_AREA_WIDTH_PERCENT = 86;  // 總寬度 (左右各縮 4%)
+        // 您上次調整的黃金比例 (T:29, H:65, L:7, W:86)
+        const CLICK_AREA_TOP_PERCENT = 29;    
+        const CLICK_AREA_HEIGHT_PERCENT = 65; 
+        const CLICK_AREA_LEFT_PERCENT = 7;    
+        const CLICK_AREA_WIDTH_PERCENT = 86;  
 
         // ==========================================
         
         const LINE_BOT_ID = "@your_bot_id"; 
         const QUESTIONS = [
-            { id: 1, image: "Q1.jpg", correct: 1 },
-            { id: 2, image: "Q2.jpg", correct: 1 },
-            { id: 3, image: "Q3.jpg", correct: 0 },
-            { id: 4, image: "Q4.jpg", correct: 2 },
-            { id: 5, image: "Q5.jpg", correct: 1 }
+            // 將所有圖片路徑改為小寫，並使用 BASE_PATH 構造絕對路徑
+            { id: 1, image: "q1.jpg", correct: 1 }, 
+            { id: 2, image: "q2.jpg", correct: 1 },
+            { id: 3, image: "q3.jpg", correct: 0 },
+            { id: 4, image: "q4.jpg", correct: 2 },
+            { id: 5, image: "q5.jpg", correct: 1 }
         ];
+        const COVER_IMAGE = "fengmian.jpg"; // 假設您將封面也改成了小寫的英文名
+
+        function getImagePath(fileName) {
+            // 修正路徑：確保瀏覽器從專案子路徑開始找檔案
+            return BASE_PATH + fileName;
+        }
 
         function App() {
             const [gameState, setGameState] = React.useState('start');
@@ -50,22 +58,20 @@
             const [score, setScore] = React.useState(0);
             const [userId, setUserId] = React.useState('');
             
-            // Debug 狀態
-            const [isDebug, setIsDebug] = React.useState(false);
-
-            // 給滑桿用的動態狀態
-            const [debugTop, setDebugTop] = React.useState(CLICK_AREA_TOP_PERCENT);
-            const [debugHeight, setDebugHeight] = React.useState(CLICK_AREA_HEIGHT_PERCENT);
-            const [debugLeft, setDebugLeft] = React.useState(CLICK_AREA_LEFT_PERCENT);
-            const [debugWidth, setDebugWidth] = React.useState(CLICK_AREA_WIDTH_PERCENT);
+            // Debug 狀態：已永久關閉
+            const isDebug = false;
+            // 即使 Debug 關閉，也需要給 React 狀態一個值，但這次會直接使用上方常數
+            const debugTop = CLICK_AREA_TOP_PERCENT;
+            const debugHeight = CLICK_AREA_HEIGHT_PERCENT;
+            const debugLeft = CLICK_AREA_LEFT_PERCENT;
+            const debugWidth = CLICK_AREA_WIDTH_PERCENT;
 
             React.useEffect(() => {
                 const params = new URLSearchParams(window.location.search);
                 const uid = params.get('uid');
-                const debug = params.get('debug');
                 
                 if (uid) setUserId(uid);
-                if (debug === 'true') setIsDebug(true); // 網址有 ?debug=true 才開啟
+                // 移除 debug 相關邏輯
             }, []);
 
             const startGame = () => {
@@ -75,8 +81,7 @@
             };
 
             const handleAnswer = (optionIndex) => {
-                if (isDebug) return; // 除錯模式下不跳轉
-
+                // 移除 isDebug 判斷，因為已永久關閉
                 const isCorrect = optionIndex === QUESTIONS[currentQIndex].correct;
                 if (isCorrect) setScore(prev => prev + 20);
                 
@@ -89,8 +94,7 @@
                 }, 200);
             };
             
-            const nextQuestion = () => { if (currentQIndex < QUESTIONS.length - 1) setCurrentQIndex(prev => prev + 1); };
-            const prevQuestion = () => { if (currentQIndex > 0) setCurrentQIndex(prev => prev - 1); };
+            // 移除 prevQuestion, nextQuestion 函數，因為它們只在 Debug 模式下使用
 
             const submitScore = () => {
                 const message = `【Adobe知識王挑戰】\n我是用戶：${userId || 'Guest'}\n我在 Week 1 獲得了：${score} 分！`;
@@ -101,12 +105,14 @@
                 return (
                     <div className="w-full h-screen bg-gray-900 flex flex-col items-center justify-center relative">
                         <div className="w-full max-w-md aspect-square relative shadow-2xl mb-8">
-                            <img src="封面.png.jpg" className="w-full h-full object-cover rounded-lg" onError={(e)=>e.target.src='https://placehold.co/600x600/333/FFF?text=封面'} />
+                            <img 
+                                src={getImagePath(COVER_IMAGE)} 
+                                className="w-full h-full object-cover rounded-lg" 
+                                onError={(e)=>e.target.src='https://placehold.co/600x600/333/FFF?text=請將封面圖改為'+COVER_IMAGE} />
                         </div>
                         <button onClick={startGame} className="bg-blue-600 text-white font-bold py-4 px-12 rounded-full text-xl shadow-lg animate-bounce">開始挑戰</button>
-                        {/* 偷偷加上 Debug 提示 */}
                         <div className="absolute bottom-2 text-gray-600 text-xs">
-                             如需微調位置，請在網址後加 ?debug=true
+                             // 移除 Debug 提示
                         </div>
                     </div>
                 );
@@ -115,60 +121,23 @@
             if (gameState === 'playing') {
                 const currentQ = QUESTIONS[currentQIndex];
                 
-                // 決定要使用的數值
-                const activeTop = isDebug ? debugTop : CLICK_AREA_TOP_PERCENT;
-                const activeHeight = isDebug ? debugHeight : CLICK_AREA_HEIGHT_PERCENT;
-                const activeLeft = isDebug ? debugLeft : CLICK_AREA_LEFT_PERCENT;
-                const activeWidth = isDebug ? debugWidth : CLICK_AREA_WIDTH_PERCENT;
+                // 直接使用常數
+                const activeTop = CLICK_AREA_TOP_PERCENT;
+                const activeHeight = CLICK_AREA_HEIGHT_PERCENT;
+                const activeLeft = CLICK_AREA_LEFT_PERCENT;
+                const activeWidth = CLICK_AREA_WIDTH_PERCENT;
 
                 return (
                     <div className="w-full h-screen bg-gray-800 flex flex-col items-center justify-start py-4 overflow-hidden relative">
                         
-                        {/* ★★★ 懸浮調整面板 (只在 ?debug=true 出現) ★★★ */}
-                        {isDebug && (
-                            <div className="fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-md text-white p-4 z-50 border-t-2 border-yellow-500 pb-8">
-                                <div className="max-w-md mx-auto space-y-3">
-                                    <div className="flex justify-between items-center">
-                                        <strong className="text-yellow-400">🔧 即時微調模式</strong>
-                                        <div className="text-xs font-mono space-x-1">
-                                            <span className="bg-blue-600 px-1 rounded">T:{debugTop}</span>
-                                            <span className="bg-green-600 px-1 rounded">H:{debugHeight}</span>
-                                            <span className="bg-red-600 px-1 rounded">L:{debugLeft}</span>
-                                            <span className="bg-purple-600 px-1 rounded">W:{debugWidth}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                                        <label className="flex items-center gap-2 text-blue-300">
-                                            Top <input type="range" min="0" max="100" value={debugTop} onChange={(e) => setDebugTop(Number(e.target.value))} className="flex-1 h-1 bg-gray-600 accent-blue-500"/>
-                                        </label>
-                                        <label className="flex items-center gap-2 text-green-300">
-                                            Height <input type="range" min="10" max="100" value={debugHeight} onChange={(e) => setDebugHeight(Number(e.target.value))} className="flex-1 h-1 bg-gray-600 accent-green-500"/>
-                                        </label>
-                                        <label className="flex items-center gap-2 text-red-300">
-                                            Left <input type="range" min="0" max="50" value={debugLeft} onChange={(e) => setDebugLeft(Number(e.target.value))} className="flex-1 h-1 bg-gray-600 accent-red-500"/>
-                                        </label>
-                                        <label className="flex items-center gap-2 text-purple-300">
-                                            Width <input type="range" min="10" max="100" value={debugWidth} onChange={(e) => setDebugWidth(Number(e.target.value))} className="flex-1 h-1 bg-gray-600 accent-purple-500"/>
-                                        </label>
-                                    </div>
-                                    
-                                    <div className="flex justify-between pt-2 border-t border-gray-600">
-                                        <button onClick={prevQuestion} className="bg-gray-700 px-4 py-1 rounded hover:bg-gray-600">◀ 上一題</button>
-                                        <span className="text-gray-400 text-xs self-center">調整完請將上方數字填回程式碼</span>
-                                        <button onClick={nextQuestion} className="bg-gray-700 px-4 py-1 rounded hover:bg-gray-600">下一題 ▶</button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        {/* 移除 Debug 模式下的調整面板 */}
 
                         <div className="w-full max-w-md relative mt-2 px-2"> 
-                            {/* 核心修正：使用 flex justify-center 讓圖片置中且無隱形邊界 */}
                             <div className="relative flex justify-center w-full">
                                 <img 
-                                    src={currentQ.image} 
+                                    src={getImagePath(currentQ.image)} 
                                     className="w-full h-auto object-contain shadow-xl block" 
-                                    onError={(e)=>e.target.src='https://placehold.co/600x600/333/FFF?text=ImgError'} 
+                                    onError={(e)=>e.target.src='https://placehold.co/600x600/333/FFF?text=請將題目圖'+currentQ.image+'改為小寫'} 
                                 />
 
                                 {/* 點擊區域 Container */}
@@ -181,18 +150,11 @@
                                         width: `${activeWidth}%`
                                     }}
                                 >
-                                    <div onClick={() => handleAnswer(0)} className={`touch-highlight flex items-center justify-center ${isDebug ? 'bg-red-500/30 border-2 border-white/50' : ''}`}>
-                                        {isDebug && <span className="text-white font-bold text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">A</span>}
-                                    </div>
-                                    <div onClick={() => handleAnswer(1)} className={`touch-highlight flex items-center justify-center ${isDebug ? 'bg-blue-500/30 border-2 border-white/50' : ''}`}>
-                                        {isDebug && <span className="text-white font-bold text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">B</span>}
-                                    </div>
-                                    <div onClick={() => handleAnswer(2)} className={`touch-highlight flex items-center justify-center ${isDebug ? 'bg-green-500/30 border-2 border-white/50' : ''}`}>
-                                        {isDebug && <span className="text-white font-bold text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">C</span>}
-                                    </div>
-                                    <div onClick={() => handleAnswer(3)} className={`touch-highlight flex items-center justify-center ${isDebug ? 'bg-yellow-500/30 border-2 border-white/50' : ''}`}>
-                                        {isDebug && <span className="text-white font-bold text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">D</span>}
-                                    </div>
+                                    {/* 移除 Debug 模式的條件判斷 */}
+                                    <div onClick={() => handleAnswer(0)} className={`touch-highlight flex items-center justify-center`}></div>
+                                    <div onClick={() => handleAnswer(1)} className={`touch-highlight flex items-center justify-center`}></div>
+                                    <div onClick={() => handleAnswer(2)} className={`touch-highlight flex items-center justify-center`}></div>
+                                    <div onClick={() => handleAnswer(3)} className={`touch-highlight flex items-center justify-center`}></div>
                                 </div>
                             </div>
                         </div>
