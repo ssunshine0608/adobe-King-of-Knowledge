@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Adobe 知識王挑戰賽</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; background-color: #2D2D2D; font-family: 'Noto Sans TC', sans-serif; }
+        .touch-highlight { transition: background-color 0.1s; }
+        .touch-highlight:active { background-color: rgba(255, 255, 255, 0.3); border-radius: 12px; }
+        /* 隱藏捲軸 */
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // ==========================================
+        // ★ 設定區 ★
+        // ==========================================
+        
+        // 為了方便您，我先預填了一組根據圖片推算的數值
+        // 如果還是不準，請在網址後面加上 ?debug=true 來微調
+        // 例如：index.html?debug=true
+        
+        const CLICK_AREA_TOP_PERCENT = 29;    // 距離頂部 (選項通常從 1/3 處開始)
+        const CLICK_AREA_HEIGHT_PERCENT = 65; // 高度 (佔據剩下的大部分)
+        const CLICK_AREA_LEFT_PERCENT = 7;    // 距離左邊 (稍微縮進去)
+        const CLICK_AREA_WIDTH_PERCENT = 86;  // 總寬度 (左右各縮 4%)
+
+        // ==========================================
+        
+        const LINE_BOT_ID = "@your_bot_id"; 
+        const QUESTIONS = [
+            { id: 1, image: "Q1.jpg", correct: 1 },
+            { id: 2, image: "Q2.jpg", correct: 1 },
+            { id: 3, image: "Q3.jpg", correct: 0 },
+            { id: 4, image: "Q4.jpg", correct: 2 },
+            { id: 5, image: "Q5.jpg", correct: 1 }
+        ];
+
+        function App() {
+            const [gameState, setGameState] = React.useState('start');
+            const [currentQIndex, setCurrentQIndex] = React.useState(0);
+            const [score, setScore] = React.useState(0);
+            const [userId, setUserId] = React.useState('');
+            
+            // Debug 狀態
+            const [isDebug, setIsDebug] = React.useState(false);
+
+            // 給滑桿用的動態狀態
+            const [debugTop, setDebugTop] = React.useState(CLICK_AREA_TOP_PERCENT);
+            const [debugHeight, setDebugHeight] = React.useState(CLICK_AREA_HEIGHT_PERCENT);
+            const [debugLeft, setDebugLeft] = React.useState(CLICK_AREA_LEFT_PERCENT);
+            const [debugWidth, setDebugWidth] = React.useState(CLICK_AREA_WIDTH_PERCENT);
+
+            React.useEffect(() => {
+                const params = new URLSearchParams(window.location.search);
+                const uid = params.get('uid');
+                const debug = params.get('debug');
+                
+                if (uid) setUserId(uid);
+                if (debug === 'true') setIsDebug(true); // 網址有 ?debug=true 才開啟
+            }, []);
+
+            const startGame = () => {
+                setGameState('playing');
+                setScore(0);
+                setCurrentQIndex(0);
+            };
+
+            const handleAnswer = (optionIndex) => {
+                if (isDebug) return; // 除錯模式下不跳轉
+
+                const isCorrect = optionIndex === QUESTIONS[currentQIndex].correct;
+                if (isCorrect) setScore(prev => prev + 20);
+                
+                setTimeout(() => {
+                    if (currentQIndex < QUESTIONS.length - 1) {
+                        setCurrentQIndex(prev => prev + 1);
+                    } else {
+                        setGameState('result');
+                    }
+                }, 200);
+            };
+            
+            const nextQuestion = () => { if (currentQIndex < QUESTIONS.length - 1) setCurrentQIndex(prev => prev + 1); };
+            const prevQuestion = () => { if (currentQIndex > 0) setCurrentQIndex(prev => prev - 1); };
+
+            const submitScore = () => {
+                const message = `【Adobe知識王挑戰】\n我是用戶：${userId || 'Guest'}\n我在 Week 1 獲得了：${score} 分！`;
+                window.location.href = `https://line.me/R/oaMessage/${LINE_BOT_ID}/?text=${encodeURIComponent(message)}`;
+            };
+
+            if (gameState === 'start') {
+                return (
+                    <div className="w-full h-screen bg-gray-900 flex flex-col items-center justify-center relative">
+                        <div className="w-full max-w-md aspect-square relative shadow-2xl mb-8">
+                            <img src="封面.png.jpg" className="w-full h-full object-cover rounded-lg" onError={(e)=>e.target.src='https://placehold.co/600x600/333/FFF?text=封面'} />
+                        </div>
+                        <button onClick={startGame} className="bg-blue-600 text-white font-bold py-4 px-12 rounded-full text-xl shadow-lg animate-bounce">開始挑戰</button>
+                        {/* 偷偷加上 Debug 提示 */}
+                        <div className="absolute bottom-2 text-gray-600 text-xs">
+                             如需微調位置，請在網址後加 ?debug=true
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'playing') {
+                const currentQ = QUESTIONS[currentQIndex];
+                
+                // 決定要使用的數值
+                const activeTop = isDebug ? debugTop : CLICK_AREA_TOP_PERCENT;
+                const activeHeight = isDebug ? debugHeight : CLICK_AREA_HEIGHT_PERCENT;
+                const activeLeft = isDebug ? debugLeft : CLICK_AREA_LEFT_PERCENT;
+                const activeWidth = isDebug ? debugWidth : CLICK_AREA_WIDTH_PERCENT;
+
+                return (
+                    <div className="w-full h-screen bg-gray-800 flex flex-col items-center justify-start py-4 overflow-hidden relative">
+                        
+                        {/* ★★★ 懸浮調整面板 (只在 ?debug=true 出現) ★★★ */}
+                        {isDebug && (
+                            <div className="fixed bottom-0 left-0 w-full bg-black/80 backdrop-blur-md text-white p-4 z-50 border-t-2 border-yellow-500 pb-8">
+                                <div className="max-w-md mx-auto space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <strong className="text-yellow-400">🔧 即時微調模式</strong>
+                                        <div className="text-xs font-mono space-x-1">
+                                            <span className="bg-blue-600 px-1 rounded">T:{debugTop}</span>
+                                            <span className="bg-green-600 px-1 rounded">H:{debugHeight}</span>
+                                            <span className="bg-red-600 px-1 rounded">L:{debugLeft}</span>
+                                            <span className="bg-purple-600 px-1 rounded">W:{debugWidth}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                                        <label className="flex items-center gap-2 text-blue-300">
+                                            Top <input type="range" min="0" max="100" value={debugTop} onChange={(e) => setDebugTop(Number(e.target.value))} className="flex-1 h-1 bg-gray-600 accent-blue-500"/>
+                                        </label>
+                                        <label className="flex items-center gap-2 text-green-300">
+                                            Height <input type="range" min="10" max="100" value={debugHeight} onChange={(e) => setDebugHeight(Number(e.target.value))} className="flex-1 h-1 bg-gray-600 accent-green-500"/>
+                                        </label>
+                                        <label className="flex items-center gap-2 text-red-300">
+                                            Left <input type="range" min="0" max="50" value={debugLeft} onChange={(e) => setDebugLeft(Number(e.target.value))} className="flex-1 h-1 bg-gray-600 accent-red-500"/>
+                                        </label>
+                                        <label className="flex items-center gap-2 text-purple-300">
+                                            Width <input type="range" min="10" max="100" value={debugWidth} onChange={(e) => setDebugWidth(Number(e.target.value))} className="flex-1 h-1 bg-gray-600 accent-purple-500"/>
+                                        </label>
+                                    </div>
+                                    
+                                    <div className="flex justify-between pt-2 border-t border-gray-600">
+                                        <button onClick={prevQuestion} className="bg-gray-700 px-4 py-1 rounded hover:bg-gray-600">◀ 上一題</button>
+                                        <span className="text-gray-400 text-xs self-center">調整完請將上方數字填回程式碼</span>
+                                        <button onClick={nextQuestion} className="bg-gray-700 px-4 py-1 rounded hover:bg-gray-600">下一題 ▶</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="w-full max-w-md relative mt-2 px-2"> 
+                            {/* 核心修正：使用 flex justify-center 讓圖片置中且無隱形邊界 */}
+                            <div className="relative flex justify-center w-full">
+                                <img 
+                                    src={currentQ.image} 
+                                    className="w-full h-auto object-contain shadow-xl block" 
+                                    onError={(e)=>e.target.src='https://placehold.co/600x600/333/FFF?text=ImgError'} 
+                                />
+
+                                {/* 點擊區域 Container */}
+                                <div 
+                                    className="absolute grid grid-cols-2 grid-rows-2" 
+                                    style={{ 
+                                        top: `${activeTop}%`, 
+                                        height: `${activeHeight}%`,
+                                        left: `${activeLeft}%`,
+                                        width: `${activeWidth}%`
+                                    }}
+                                >
+                                    <div onClick={() => handleAnswer(0)} className={`touch-highlight flex items-center justify-center ${isDebug ? 'bg-red-500/30 border-2 border-white/50' : ''}`}>
+                                        {isDebug && <span className="text-white font-bold text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">A</span>}
+                                    </div>
+                                    <div onClick={() => handleAnswer(1)} className={`touch-highlight flex items-center justify-center ${isDebug ? 'bg-blue-500/30 border-2 border-white/50' : ''}`}>
+                                        {isDebug && <span className="text-white font-bold text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">B</span>}
+                                    </div>
+                                    <div onClick={() => handleAnswer(2)} className={`touch-highlight flex items-center justify-center ${isDebug ? 'bg-green-500/30 border-2 border-white/50' : ''}`}>
+                                        {isDebug && <span className="text-white font-bold text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">C</span>}
+                                    </div>
+                                    <div onClick={() => handleAnswer(3)} className={`touch-highlight flex items-center justify-center ${isDebug ? 'bg-yellow-500/30 border-2 border-white/50' : ''}`}>
+                                        {isDebug && <span className="text-white font-bold text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">D</span>}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'result') {
+                return (
+                    <div className="w-full h-screen bg-gray-900 flex flex-col items-center justify-center p-4 text-white">
+                        <div className="text-6xl font-black mb-6">{score} 分</div>
+                        <button onClick={submitScore} className="bg-green-500 text-white font-bold py-4 px-6 rounded-xl">登記成績</button>
+                        <button onClick={()=>window.location.reload()} className="bg-gray-700 text-white py-3 px-6 rounded-xl mt-4">再玩一次</button>
+                    </div>
+                );
+            }
+            return null;
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
