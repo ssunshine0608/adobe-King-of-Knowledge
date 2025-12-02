@@ -4,10 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Adobe 知識王挑戰賽</title>
+    
+    <!-- 確保 React 核心函式庫在運行前載入 -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; background-color: #2D2D2D; font-family: 'Noto Sans TC', sans-serif; }
         .touch-highlight { transition: background-color 0.1s; }
@@ -24,11 +27,11 @@
         // ★ 設定區 ★
         // ==========================================
         
-        // 【重要修正】GitHub Pages 的專案名稱，用於構造正確的圖片路徑
-        // 請確保所有圖片檔名都已改為小寫（q1.jpg, q2.jpg, fengmian.jpg 等）
+        // 【專案路徑】GitHub Pages 的專案名稱，用於構造正確的圖片路徑
+        // 注意：請確保所有圖片檔名都已改為小寫（q1.jpg, fengmian.jpg 等）
         const BASE_PATH = "/adobe-King-of-Knowledge/";
         
-        // 您上次調整的黃金比例 (T:29, H:65, L:7, W:86)
+        // 【點擊區域參數】T:29, H:65, L:7, W:86 - 這是您調整好的精準位置
         const CLICK_AREA_TOP_PERCENT = 29;    
         const CLICK_AREA_HEIGHT_PERCENT = 65; 
         const CLICK_AREA_LEFT_PERCENT = 7;    
@@ -38,14 +41,14 @@
         
         const LINE_BOT_ID = "@your_bot_id"; 
         const QUESTIONS = [
-            // 將所有圖片路徑改為小寫，並使用 BASE_PATH 構造絕對路徑
+            // 請確保這些檔名與您 GitHub 倉庫中的檔案名稱完全匹配
             { id: 1, image: "q1.jpg", correct: 1 }, 
             { id: 2, image: "q2.jpg", correct: 1 },
             { id: 3, image: "q3.jpg", correct: 0 },
             { id: 4, image: "q4.jpg", correct: 2 },
             { id: 5, image: "q5.jpg", correct: 1 }
         ];
-        const COVER_IMAGE = "fengmian.jpg"; // 假設您將封面也改成了小寫的英文名
+        const COVER_IMAGE = "fengmian.jpg"; 
 
         function getImagePath(fileName) {
             // 修正路徑：確保瀏覽器從專案子路徑開始找檔案
@@ -58,20 +61,15 @@
             const [score, setScore] = React.useState(0);
             const [userId, setUserId] = React.useState('');
             
-            // Debug 狀態：已永久關閉
-            const isDebug = false;
-            // 即使 Debug 關閉，也需要給 React 狀態一個值，但這次會直接使用上方常數
-            const debugTop = CLICK_AREA_TOP_PERCENT;
-            const debugHeight = CLICK_AREA_HEIGHT_PERCENT;
-            const debugLeft = CLICK_AREA_LEFT_PERCENT;
-            const debugWidth = CLICK_AREA_WIDTH_PERCENT;
+            const activeTop = CLICK_AREA_TOP_PERCENT;
+            const activeHeight = CLICK_AREA_HEIGHT_PERCENT;
+            const activeLeft = CLICK_AREA_LEFT_PERCENT;
+            const activeWidth = CLICK_AREA_WIDTH_PERCENT;
 
             React.useEffect(() => {
                 const params = new URLSearchParams(window.location.search);
                 const uid = params.get('uid');
-                
                 if (uid) setUserId(uid);
-                // 移除 debug 相關邏輯
             }, []);
 
             const startGame = () => {
@@ -81,7 +79,6 @@
             };
 
             const handleAnswer = (optionIndex) => {
-                // 移除 isDebug 判斷，因為已永久關閉
                 const isCorrect = optionIndex === QUESTIONS[currentQIndex].correct;
                 if (isCorrect) setScore(prev => prev + 20);
                 
@@ -94,8 +91,6 @@
                 }, 200);
             };
             
-            // 移除 prevQuestion, nextQuestion 函數，因為它們只在 Debug 模式下使用
-
             const submitScore = () => {
                 const message = `【Adobe知識王挑戰】\n我是用戶：${userId || 'Guest'}\n我在 Week 1 獲得了：${score} 分！`;
                 window.location.href = `https://line.me/R/oaMessage/${LINE_BOT_ID}/?text=${encodeURIComponent(message)}`;
@@ -108,12 +103,9 @@
                             <img 
                                 src={getImagePath(COVER_IMAGE)} 
                                 className="w-full h-full object-cover rounded-lg" 
-                                onError={(e)=>e.target.src='https://placehold.co/600x600/333/FFF?text=請將封面圖改為'+COVER_IMAGE} />
+                                onError={(e)=>e.target.src='https://placehold.co/600x600/333/FFF?text=請確認封面圖'+COVER_IMAGE+'檔名'} />
                         </div>
                         <button onClick={startGame} className="bg-blue-600 text-white font-bold py-4 px-12 rounded-full text-xl shadow-lg animate-bounce">開始挑戰</button>
-                        <div className="absolute bottom-2 text-gray-600 text-xs">
-                             // 移除 Debug 提示
-                        </div>
                     </div>
                 );
             }
@@ -121,23 +113,14 @@
             if (gameState === 'playing') {
                 const currentQ = QUESTIONS[currentQIndex];
                 
-                // 直接使用常數
-                const activeTop = CLICK_AREA_TOP_PERCENT;
-                const activeHeight = CLICK_AREA_HEIGHT_PERCENT;
-                const activeLeft = CLICK_AREA_LEFT_PERCENT;
-                const activeWidth = CLICK_AREA_WIDTH_PERCENT;
-
                 return (
                     <div className="w-full h-screen bg-gray-800 flex flex-col items-center justify-start py-4 overflow-hidden relative">
-                        
-                        {/* 移除 Debug 模式下的調整面板 */}
-
                         <div className="w-full max-w-md relative mt-2 px-2"> 
                             <div className="relative flex justify-center w-full">
                                 <img 
                                     src={getImagePath(currentQ.image)} 
                                     className="w-full h-auto object-contain shadow-xl block" 
-                                    onError={(e)=>e.target.src='https://placehold.co/600x600/333/FFF?text=請將題目圖'+currentQ.image+'改為小寫'} 
+                                    onError={(e)=>e.target.src='https://placehold.co/600x600/333/FFF?text=請確認題目圖'+currentQ.image+'檔名'} 
                                 />
 
                                 {/* 點擊區域 Container */}
@@ -150,7 +133,6 @@
                                         width: `${activeWidth}%`
                                     }}
                                 >
-                                    {/* 移除 Debug 模式的條件判斷 */}
                                     <div onClick={() => handleAnswer(0)} className={`touch-highlight flex items-center justify-center`}></div>
                                     <div onClick={() => handleAnswer(1)} className={`touch-highlight flex items-center justify-center`}></div>
                                     <div onClick={() => handleAnswer(2)} className={`touch-highlight flex items-center justify-center`}></div>
