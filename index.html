@@ -13,14 +13,22 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    body {
+    html, body, #root {
       margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;              /* ❗ 禁止捲動 */
+      overscroll-behavior: none;     /* 手機上阻止彈性捲動 */
+    }
+
+    body {
       background-color: #111827;
       font-family: "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
     }
+
     .touch-highlight {
       transition: background-color 0.1s;
     }
@@ -28,6 +36,7 @@
       background-color: rgba(255, 255, 255, 0.25);
       border-radius: 16px;
     }
+
     ::-webkit-scrollbar {
       display: none;
     }
@@ -51,8 +60,6 @@
     }
 
     .explanation-card {
-      background: #111827;
-      color: #f9fafb;
       padding: 20px 22px;
       border-radius: 18px;
       max-width: 360px;
@@ -60,19 +67,37 @@
       box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
       transform: translateY(10px);
       transition: transform 0.25s ease;
+      color: #f9fafb;
     }
     .overlay.show .explanation-card {
       transform: translateY(0);
     }
 
-    .explanation-card h2 {
-      font-size: 20px;
-      margin-bottom: 8px;
-      font-weight: 800;
+    /* ✅ / ❌ 狀態樣式 */
+    .explanation-card.correct {
+      background: radial-gradient(circle at top, #16a34a33, #022c22);
+      border: 2px solid #22c55e;
     }
-    .explanation-card p {
+    .explanation-card.wrong {
+      background: radial-gradient(circle at top, #fb718533, #3f0f1f);
+      border: 2px solid #fb7185;
+    }
+
+    .explanation-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .explanation-subtitle {
+      font-size: 12px;
+      opacity: 0.85;
+    }
+
+    .explanation-text {
       font-size: 14px;
       line-height: 1.6;
+      margin-top: 10px;
       margin-bottom: 16px;
     }
 
@@ -248,7 +273,7 @@
       // ========= Start 畫面 =========
       if (gameState === "start") {
         return (
-          <div className="w-full h-screen bg-gray-900 flex items-center justify-center">
+          <div className="w-full h-full bg-gray-900 flex items-center justify-center">
             <div className="w-full max-w-md px-4">
               <div className="relative w-full aspect-[9/16] mx-auto shadow-2xl">
                 {/* 封面圖 */}
@@ -268,7 +293,7 @@
                     (DEV_MODE ? " border border-emerald-300/80" : "")
                   }
                   style={{
-                    top: "80%",   // 你可以之後再微調
+                    top: "80%",
                     height: "8%",
                     left: "32%",
                     width: "36%"
@@ -291,7 +316,7 @@
         const currentQ = QUESTIONS[currentQIndex];
 
         return (
-          <div className="w-full h-screen bg-gray-800 flex items-center justify-center overflow-hidden relative">
+          <div className="w-full h-full bg-gray-800 flex items-center justify-center overflow-hidden relative">
             <div className="w-full max-w-md px-4">
               <div className="relative w-full aspect-[9/16] mx-auto">
                 <img
@@ -418,13 +443,37 @@
 
             {/* 解析浮層 */}
             <div className={`overlay ${showExplanation ? "show" : ""}`}>
-              <div className="explanation-card">
-                <h2>{lastIsCorrect ? "正確 ⭕️" : "錯誤 ❌"}</h2>
-                <p>{QUESTIONS[currentQIndex].explanation}</p>
+              <div className={
+                "explanation-card " +
+                (lastIsCorrect ? "correct" : "wrong")
+              }>
+                <div className="flex items-center">
+                  <div
+                    className={
+                      "w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold " +
+                      (lastIsCorrect
+                        ? "bg-emerald-500/20 border border-emerald-300 text-emerald-300"
+                        : "bg-rose-500/20 border border-rose-300 text-rose-300")
+                    }
+                  >
+                    {lastIsCorrect ? "✓" : "✕"}
+                  </div>
+                  <div className="ml-3">
+                    <div className="explanation-title">
+                      {lastIsCorrect ? "答對了！🎉" : "這題失誤了～ 😅"}
+                    </div>
+                    <div className="explanation-subtitle">
+                      第 {currentQIndex + 1} 題 / 共 {QUESTIONS.length} 題
+                    </div>
+                  </div>
+                </div>
+
+                <div className="explanation-text">
+                  {QUESTIONS[currentQIndex].explanation}
+                </div>
+
                 <div className="explanation-footer">
-                  <span>
-                    第 {currentQIndex + 1} 題 / 共 {QUESTIONS.length} 題
-                  </span>
+                  <span>目前分數：{score} 分</span>
                   <button
                     type="button"
                     className="explanation-next-btn"
@@ -442,7 +491,7 @@
       // ========= 結果畫面 =========
       if (gameState === "result") {
         return (
-          <div className="w-full h-screen bg-gray-900 flex flex-col items-center justify-center p-4 text-white">
+          <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center p-4 text-white">
             <div className="text-sm mb-2 text-gray-300">本週挑戰完成！</div>
             <div className="text-6xl font-black mb-2">{score} 分</div>
             <div className="mb-6 text-gray-300 text-sm">
