@@ -81,7 +81,7 @@
       border: 2px solid #22c55e;
     }
     .explanation-card.wrong {
-      background: radial-gradient(circle at top, #fb7186, #3f0f1f);
+      background: radial-gradient(circle at top, #cb233c, #3f0f1f);
       border: 2px solid #fb7185;
     }
 
@@ -221,55 +221,30 @@
         if (uid) setUserId(uid);
       }, []);
 
-      // 🎉 100 分時觸發左右下角往上噴的彩帶
+      // 🎉 100 分時觸發左右下角往上噴的彩帶（精簡版）
       React.useEffect(() => {
         if (gameState !== "result" || score !== 100) return;
         if (!window.confetti) return;
 
         const confetti = window.confetti;
 
-        // 首發左右各一發
+        // 左下往右上
         confetti({
-          particleCount: 80,
-          angle: 60,             // 左下往右上
-          spread: 70,
+          particleCount: 50,
+          angle: 60,
+          spread: 55,
           origin: { x: 0, y: 1 },
-          colors: ["#FF7A00", "#FFCD00", "#FF2D55", "#35A7FF", "#7B61FF"],
-          ticks: 150
+          ticks: 120
         });
 
+        // 右下往左上
         confetti({
-          particleCount: 80,
-          angle: 120,            // 右下往左上
-          spread: 70,
+          particleCount: 50,
+          angle: 120,
+          spread: 55,
           origin: { x: 1, y: 1 },
-          colors: ["#FF7A00", "#FFCD00", "#FF2D55", "#35A7FF", "#7B61FF"],
-          ticks: 150
+          ticks: 120
         });
-
-        // 連續噴 1.2 秒，像舞台彩帶砲
-        const duration = 1200;
-        const end = Date.now() + duration;
-
-        (function frame() {
-          confetti({
-            particleCount: 30,
-            angle: 60,
-            spread: 60,
-            origin: { x: 0, y: 1 }
-          });
-
-          confetti({
-            particleCount: 30,
-            angle: 120,
-            spread: 60,
-            origin: { x: 1, y: 1 }
-          });
-
-          if (Date.now() < end) {
-            requestAnimationFrame(frame);
-          }
-        })();
       }, [gameState, score]);
 
       const startGame = () => {
@@ -556,20 +531,11 @@
                 本週挑戰完成！
               </div>
 
-              {/* 分數 + Firefly 小徽章（只有 100 分才出現） */}
-              <div className="flex items-center justify-center gap-3 mb-3">
-                <div className="text-6xl font-black">{score} 分</div>
-                {isFullScore && (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-300 via-yellow-400 to-orange-500 shadow-lg flex items-center justify-center animate-pulse">
-                    <span className="text-[10px] font-bold text-gray-900 leading-tight">
-                      Fire<br/>fly
-                    </span>
-                  </div>
-                )}
-              </div>
+              {/* 只顯示大分數，不要 Firefly 圓形徽章 */}
+              <div className="text-6xl font-black mb-3">{score} 分</div>
 
               <div className="mb-2 text-gray-300 text-sm text-center leading-relaxed px-8 max-w-[260px] mx-auto">
-                最高分 100 分，點擊「登記成績」上傳至 LINE 領取點數 🏆
+                點擊「登記成績」上傳至 LINE 領取點數 🏆
               </div>
 
               {isFullScore ? (
