@@ -11,6 +11,8 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 彩帶套件 -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
   <style>
     html, body, #root {
@@ -125,42 +127,6 @@
       transform: scale(0.96);
       box-shadow: none;
     }
-
-    /* 🎉 Confetti 動畫 */
-    .confetti-piece {
-      position: absolute;
-      top: -12px;
-      width: 6px;
-      height: 14px;
-      border-radius: 999px;
-      opacity: 0.9;
-      animation: confetti-fall 1.8s ease-out infinite;
-    }
-
-    @keyframes confetti-fall {
-      0% {
-        transform: translate3d(0, 0, 0) rotateZ(0deg);
-      }
-      100% {
-        transform: translate3d(0, 110vh, 0) rotateZ(360deg);
-      }
-    }
-
-    /* ✨ Firefly 小火花徽章 */
-    .firefly-badge {
-      width: 44px;
-      height: 44px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 20%, #fff7cc, #fbbf24 40%, #f97316 65%, #7c2d12 100%);
-      box-shadow:
-        0 0 18px rgba(250, 204, 21, 0.9),
-        0 0 40px rgba(248, 250, 252, 0.25);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fef9c3;
-      font-size: 20px;
-    }
   </style>
 </head>
 
@@ -217,7 +183,7 @@
       }
     ];
 
-    // 你現在校準好的初始點擊區數值
+    // 你校準好的初始點擊區數值
     const INIT_TOP = 38;
     const INIT_HEIGHT = 42;
     const INIT_LEFT = 8;
@@ -228,49 +194,10 @@
       return fileName;
     }
 
-    // 🎉 Confetti 元件（只在滿分時渲染）
-    function ConfettiLayer() {
-      const pieces = Array.from({ length: 28 });
-      return (
-        <div className="pointer-events-none fixed inset-0 overflow-hidden z-[800]">
-          {pieces.map((_, i) => {
-            const left = (i * 7) % 100; // 0–100%
-            const delay = (i * 0.12).toFixed(2) + "s";
-            const colors = ["#f97316", "#fb7185", "#22c55e", "#38bdf8"];
-            const color = colors[i % colors.length];
-            return (
-              <span
-                key={i}
-                className="confetti-piece"
-                style={{
-                  left: left + "%",
-                  backgroundColor: color,
-                  animationDelay: delay
-                }}
-              ></span>
-            );
-          })}
-        </div>
-      );
-    }
-
-    // ✨ Firefly 小火花徽章
-    function FireflyBadge() {
-      return (
-        <div className="flex flex-col items-center mb-3">
-          <div className="firefly-badge">
-            ✦
-          </div>
-          <div className="mt-2 text-amber-300 text-[11px] tracking-wide">
-            Firefly 完美滿分！
-          </div>
-        </div>
-      );
-    }
-
     // ===============================
     // React App
     // ===============================
+
     function App() {
       const [gameState, setGameState] = React.useState("start"); // start | playing | result
       const [currentQIndex, setCurrentQIndex] = React.useState(0);
@@ -293,6 +220,57 @@
         const uid = params.get("uid");
         if (uid) setUserId(uid);
       }, []);
+
+      // 🎉 100 分時觸發左右下角往上噴的彩帶
+      React.useEffect(() => {
+        if (gameState !== "result" || score !== 100) return;
+        if (!window.confetti) return;
+
+        const confetti = window.confetti;
+
+        // 首發左右各一發
+        confetti({
+          particleCount: 80,
+          angle: 60,             // 左下往右上
+          spread: 70,
+          origin: { x: 0, y: 1 },
+          colors: ["#FF7A00", "#FFCD00", "#FF2D55", "#35A7FF", "#7B61FF"],
+          ticks: 150
+        });
+
+        confetti({
+          particleCount: 80,
+          angle: 120,            // 右下往左上
+          spread: 70,
+          origin: { x: 1, y: 1 },
+          colors: ["#FF7A00", "#FFCD00", "#FF2D55", "#35A7FF", "#7B61FF"],
+          ticks: 150
+        });
+
+        // 連續噴 1.2 秒，像舞台彩帶砲
+        const duration = 1200;
+        const end = Date.now() + duration;
+
+        (function frame() {
+          confetti({
+            particleCount: 30,
+            angle: 60,
+            spread: 60,
+            origin: { x: 0, y: 1 }
+          });
+
+          confetti({
+            particleCount: 30,
+            angle: 120,
+            spread: 60,
+            origin: { x: 1, y: 1 }
+          });
+
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        })();
+      }, [gameState, score]);
 
       const startGame = () => {
         setGameState("playing");
@@ -565,45 +543,54 @@
 
       // ========= 結果畫面 =========
       if (gameState === "result") {
-        const isPerfect = score === QUESTIONS.length * 20; // 滿分 100 分
+        const isFullScore = score === 100;
 
         return (
-          <div className="w-full h-full bg-gradient-to-b from-slate-900 via-slate-950 to-[#050816] flex items-center justify-center p-4 text-white relative overflow-hidden">
-            {/* 🎉 只有滿分才顯示彩帶 */}
-            {isPerfect && <ConfettiLayer />}
+          <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center p-4 text-white relative overflow-hidden">
+            {/* 背景微漸層 & 光暈 */}
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 opacity-90 pointer-events-none"></div>
+            <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[280px] h-[280px] bg-amber-400/10 blur-3xl rounded-full pointer-events-none"></div>
 
-            <div className="relative z-10 flex flex-col items-center max-w-md w-full">
-              <div className="text-sm mb-2 text-slate-200">
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="text-xs mb-2 text-gray-300 tracking-wide">
                 本週挑戰完成！
               </div>
 
-              {/* ✨ 滿分才有 Firefly 徽章 */}
-              {isPerfect && <FireflyBadge />}
-
-              <div className="text-6xl font-black mb-2">
-                {score} 分
+              {/* 分數 + Firefly 小徽章（只有 100 分才出現） */}
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <div className="text-6xl font-black">{score} 分</div>
+                {isFullScore && (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-300 via-yellow-400 to-orange-500 shadow-lg flex items-center justify-center animate-pulse">
+                    <span className="text-[10px] font-bold text-gray-900 leading-tight">
+                      Fire<br/>fly
+                    </span>
+                  </div>
+                )}
               </div>
 
-              <div className="mb-4 text-gray-300 text-sm text-center leading-relaxed px-8 max-w-[260px] mx-auto">
-                最高分 100 分，點擊「登記成績」回傳 LINE 領取獎勵點數 🏆
+              <div className="mb-2 text-gray-300 text-sm text-center leading-relaxed px-8 max-w-[260px] mx-auto">
+                最高分 100 分，點擊「登記成績」上傳至 LINE 領取點數 🏆
               </div>
 
-              <div className="mb-6 text-gray-400 text-xs text-center max-w-[260px] mx-auto">
-                {isPerfect
-                  ? "恭喜達成滿分成就！截圖收藏一下，順便炫耀給同事或主管看 ✨"
-                  : "如果這次還不是 100 分，也可以再挑戰一次，看看能不能解鎖滿分 Firefly！"}
-              </div>
+              {isFullScore ? (
+                <div className="mb-6 text-amber-300 text-xs text-center px-8 max-w-[260px] mx-auto">
+                  已達成本週滿分成就，別忘了完成登記，才能成功累積點數。
+                </div>
+              ) : (
+                <div className="mb-6 text-gray-400 text-xs text-center px-8 max-w-[260px] mx-auto">
+                  還差一點點，隨時可以再挑戰一次，把分數刷到滿分！
+                </div>
+              )}
 
               <button
                 onClick={submitScore}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg w-40 text-sm"
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg w-56 text-center"
               >
                 登記成績
               </button>
-
               <button
                 onClick={() => window.location.reload()}
-                className="bg-slate-700 hover:bg-slate-600 text-white py-2.5 px-6 rounded-xl mt-4 text-xs w-32"
+                className="bg-gray-700 hover:bg-gray-600 text-white py-2.5 px-6 rounded-xl mt-4 text-sm w-40 text-center"
               >
                 再玩一次
               </button>
