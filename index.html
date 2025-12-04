@@ -45,7 +45,7 @@
     .overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.75);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -75,11 +75,11 @@
 
     /* ✅ / ❌ 狀態樣式 */
     .explanation-card.correct {
-      background: radial-gradient(circle at top, #16a34a33, #022c22);
+      background: radial-gradient(circle at top, #16a34a, #022c22);
       border: 2px solid #22c55e;
     }
     .explanation-card.wrong {
-      background: radial-gradient(circle at top, #fb718533, #3f0f1f);
+      background: radial-gradient(circle at top, #fb7186, #3f0f1f);
       border: 2px solid #fb7185;
     }
 
@@ -460,7 +460,7 @@
                   </div>
                   <div className="ml-3">
                     <div className="explanation-title">
-                      {lastIsCorrect ? "答對了！🎉" : "這題失誤了～ 😅"}
+                      {lastIsCorrect ? "答對了！🎉" : "答錯了"}
                     </div>
                     <div className="explanation-subtitle">
                       第 {currentQIndex + 1} 題 / 共 {QUESTIONS.length} 題
